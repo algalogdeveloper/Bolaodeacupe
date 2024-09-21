@@ -1,20 +1,22 @@
 package org.logcod.lojajogos.config;
 
-import java.sql.DriverManager;
+import java.sql.Connection;
 import java.sql.SQLException;
+import org.postgresql.ds.PGSimpleDataSource;
 
 public class ConnectionIntegrarHost implements DataSourceConnection {
 
-    @Override
-    public java.sql.Connection open() {
-        try {
-            Class.forName("org.postgresql.Driver").newInstance();
-            return DriverManager.getConnection("jdbc:postgresql://localhost:5432/bolaodeacupe_bda", "bolaodeacupe_diocesse", "1@cuca82");
-        } catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            return null;
-
+    @Override    
+    public Connection open(){      
+        try { 
+            PGSimpleDataSource dataSource = new PGSimpleDataSource();
+            dataSource.setURL("jdbc:postgresql://localhost:5432/bolaodeacupe_bda");
+            dataSource.setPassword("1@cuca82");
+            dataSource.setUser("bolaodeacupe_diocesse");
+            return dataSource.getConnection();
+        } catch (SQLException ex) {
+            throw new IllegalArgumentException(ex);
         }
-
     }
     
 

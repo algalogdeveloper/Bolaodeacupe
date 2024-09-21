@@ -3,6 +3,7 @@ package org.logcod.lojajogos.login;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,36 +33,41 @@ public class LoginUser extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("restricao");
-        String logado = (String) request.getSession().getAttribute("logado");
-        String login = request.getParameter("login");
-        String senha = request.getParameter("senha");
-        logado = destruirSessao(logado, request);
-        if (Objects.isNull(logado)) {
-            switch (action) {
-                case "permission":
-                    if (fs.validarLogin(login, senha)) {
-                        funcionario = fs.logarFuncionario(login.trim(), senha.trim());
-                        funcionario.setHostacesso(request.getRemoteAddr());
-                        url = permissaoFuncionario(request, funcionario, session);
-                    } else {
-                        qtdacesso++;
-                        msg = "Login ou senha invalidos!";
-                        if (qtdacesso == 4) {
-                            request.setAttribute("qtdacesso", qtdacesso);
-                            msg = "Atenção você já fez " + qtdacesso + " tentivas a plataforma vai bloquear!";
+        try {
+            String action = request.getParameter("restricao");
+            String logado = (String) request.getSession().getAttribute("logado");
+            String login = request.getParameter("login");
+            String senha = request.getParameter("senha");
+            logado = destruirSessao(logado, request);
+            if (Objects.isNull(logado)) {
+                switch (action) {
+                    case "permission":
+                        if (fs.validarLogin(login, senha)) {
+                            funcionario = fs.logarFuncionario(login.trim(), senha.trim());
+                            funcionario.setHostacesso(request.getRemoteAddr());
+                            url = permissaoFuncionario(request, funcionario, session);
+                        } else {
+                            qtdacesso++;
+                            msg = "Login ou senha invalidos!";
+                            if (qtdacesso == 4) {
+                                request.setAttribute("qtdacesso", qtdacesso);
+                                msg = "Atenção você já fez " + qtdacesso + " tentivas a plataforma vai bloquear!";
+                            }
+                            request.setAttribute("msg", msg);
+                            url = "index.jsp";
+                            RequestDispatcher d = request.getRequestDispatcher(url);
+                            d.forward(request, response);
                         }
-                        request.setAttribute("msg", msg);
-                        url = "index.jsp";
-                        RequestDispatcher d = request.getRequestDispatcher(url);
-                        d.forward(request, response);
-                    }
-                    break;
-            }
+                        break;
+                }
 
+            }
+            response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+            response.setHeader("Location", url);
+        } catch (IOException | ServletException e) {
+            throw new IllegalArgumentException(e);
         }
-        response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-        response.setHeader("Location", url);
+
     }
 
     public String permissaoFuncionario(HttpServletRequest request, Funcionario funcionario, HttpSession session) {
@@ -73,6 +79,7 @@ public class LoginUser extends HttpServlet {
         session.setAttribute("permissao", funcionario.getPermissao());
         session.setAttribute("dataAcesso", Calendar.getInstance().getTime());
         String url = "index.jsp";
+
         switch (funcionario.getPermissao()) {
             case 1:
                 url = "controller?operacao=PainelAdministrativo";
@@ -89,6 +96,12 @@ public class LoginUser extends HttpServlet {
 
         }
         return url;
+    }
+
+    public long tempodaSessao(HttpSession session) {
+        Long segundos = session.getMaxInactiveInterval()
+                - (System.currentTimeMillis() - session.getLastAccessedTime()) / 1000;
+        return TimeUnit.SECONDS.toMinutes(segundos);
     }
 
 }
