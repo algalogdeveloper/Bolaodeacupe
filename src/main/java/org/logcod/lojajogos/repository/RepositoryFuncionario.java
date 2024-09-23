@@ -7,12 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
-
 import org.logcod.lojajogos.config.ContextConfigDataSource;
+import org.logcod.lojajogos.config.util.ProtegerPasswordUsuario;
 import org.logcod.lojajogos.jdbc.queries.funcionario.CreateNamedQueryFuncionario;
 import org.logcod.lojajogos.jdbc.sql.funcionario.CreateSQLFuncionario;
-import org.logcod.lojajogos.model.entity.Compra;
 import org.logcod.lojajogos.model.entity.Funcionario;
 
 public class RepositoryFuncionario {
@@ -31,7 +29,7 @@ public class RepositoryFuncionario {
         try {
             PreparedStatement ps = connection.prepareStatement(CreateNamedQueryFuncionario.validarFuncionario());
             ps.setString(1, login);
-            ps.setString(2, senha);
+            ps.setString(2, ProtegerPasswordUsuario.esconderSenha(senha));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return true;
@@ -173,7 +171,8 @@ public class RepositoryFuncionario {
             ps.setString(2, f.getContato());
             ps.setInt(3, f.getPermissao());
             ps.setString(4, f.getEmail());
-            ps.setInt(5, f.getIdFuncionario());
+            ps.setInt(6, f.getIdFuncionario());
+            ps.setObject(5, f.getSenha());
             ps.executeUpdate();
             return f;
         } catch (SQLException e) {
@@ -186,7 +185,7 @@ public class RepositoryFuncionario {
         try {
             ps = connection.prepareStatement(CreateNamedQueryFuncionario.logar());
             ps.setString(1, login);
-            ps.setString(2, senha);
+            ps.setString(2, ProtegerPasswordUsuario.esconderSenha(senha));
             rs = ps.executeQuery();
             Funcionario f = null;
             if (rs.next()) {
@@ -225,6 +224,19 @@ public class RepositoryFuncionario {
             System.out.println(e.getMessage());
             return null;
         }
+    }
+
+    public void remove(long param) {
+     try {
+            ps = connection.prepareStatement("delete from funcionario  where idfuncionario = ?");
+            ps.setObject(1,param);
+            System.out.println("Log:"+ps.toString());
+            ps.executeUpdate();           
+        } catch (SQLException e) {
+            System.out.println("Log: " + e.getMessage());
+           
+        }
+    
     }
 
    

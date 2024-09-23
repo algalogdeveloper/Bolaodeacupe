@@ -11,7 +11,7 @@ public class CreateSQLFuncionario {
 	}
 
 	public static String merge() {
-		return  "update funcionario set nome=?,contato=?,permissao=?,email=? where idfuncionario = ? ";
+		return  "update funcionario set nome=?,contato=?,permissao=?,email=?,senha = ? where idfuncionario = ? ";
 	}
 
 }

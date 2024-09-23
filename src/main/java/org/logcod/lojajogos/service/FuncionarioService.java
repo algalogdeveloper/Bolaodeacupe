@@ -66,4 +66,8 @@ public class FuncionarioService {
         return rf.todos();
     }
 
+    public void remove(String acao) {
+        rf.remove(Long.parseLong(acao));
+    }
+
 }
